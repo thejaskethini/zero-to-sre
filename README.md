@@ -1,9 +1,11 @@
 <p align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=28&duration=3000&pause=1000&color=00D4FF&center=true&vCenter=true&multiline=true&repeat=true&width=800&height=100&lines=%F0%9F%9B%A0%EF%B8%8F+Zero+to+SRE;DevOps+%E2%80%A2+Site+Reliability+%E2%80%A2+AIOps" alt="Zero to SRE" />
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=32&duration=3000&pause=1000&color=00D4FF&center=true&vCenter=true&multiline=true&repeat=true&width=800&height=100&lines=%F0%9F%9A%80+Zero+to+SRE;The+Complete+DevOps+%2B+Cloud+%2B+SRE+%2B+AIOps+Guide" alt="Zero to SRE" />
 </p>
 
 <p align="center">
-  <strong>Your ultimate roadmap for DevOps, Site Reliability Engineering & AIOps mastery.</strong>
+  <strong>🎯 Your ultimate open-source roadmap — from absolute beginner to production-ready engineer.</strong>
+  <br />
+  <sub>100+ files · 23 deep-dive modules · 9 cheatsheets · 10 projects · Real-world scripts</sub>
 </p>
 
 <p align="center">
@@ -15,109 +17,152 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Terraform-7B42BC?style=flat-square&logo=terraform&logoColor=white" alt="Terraform" />
+  <img src="https://img.shields.io/badge/AWS-232F3E?style=flat-square&logo=amazon-aws&logoColor=white" alt="AWS" />
+  <img src="https://img.shields.io/badge/Azure-0078D4?style=flat-square&logo=microsoft-azure&logoColor=white" alt="Azure" />
+  <img src="https://img.shields.io/badge/GCP-4285F4?style=flat-square&logo=google-cloud&logoColor=white" alt="GCP" />
   <img src="https://img.shields.io/badge/Kubernetes-326CE5?style=flat-square&logo=kubernetes&logoColor=white" alt="Kubernetes" />
   <img src="https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker" />
+  <img src="https://img.shields.io/badge/Terraform-7B42BC?style=flat-square&logo=terraform&logoColor=white" alt="Terraform" />
   <img src="https://img.shields.io/badge/Prometheus-E6522C?style=flat-square&logo=prometheus&logoColor=white" alt="Prometheus" />
   <img src="https://img.shields.io/badge/Grafana-F46800?style=flat-square&logo=grafana&logoColor=white" alt="Grafana" />
   <img src="https://img.shields.io/badge/ArgoCD-EF7B4D?style=flat-square&logo=argo&logoColor=white" alt="ArgoCD" />
   <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=github-actions&logoColor=white" alt="GitHub Actions" />
   <img src="https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" />
-  <img src="https://img.shields.io/badge/AWS-232F3E?style=flat-square&logo=amazon-aws&logoColor=white" alt="AWS" />
-  <img src="https://img.shields.io/badge/GCP-4285F4?style=flat-square&logo=google-cloud&logoColor=white" alt="GCP" />
+  <img src="https://img.shields.io/badge/Ansible-EE0000?style=flat-square&logo=ansible&logoColor=white" alt="Ansible" />
 </p>
 
 ---
 
 ## 🎯 What is Zero to SRE?
 
-**Zero to SRE** is a free, open-source, community-driven knowledge base that takes you from absolute beginner to production-ready expertise across three critical pillars of modern infrastructure:
+**Zero to SRE** is a free, open-source, community-driven knowledge base that takes you from absolute beginner to production-ready expertise across **four critical pillars** of modern infrastructure:
 
-| Pillar | Focus | You'll Learn |
-|--------|-------|-------------|
-| 🔧 **DevOps** | Build & Ship | CI/CD, Containers, IaC, GitOps, Platform Engineering |
-| 🔥 **SRE** | Run & Reliability | Observability, Incidents, SLOs, Chaos Engineering, Toil Reduction |
-| 🤖 **AIOps** | Intelligent Ops | Anomaly Detection, Smart Alerting, Log Intelligence, LLMOps |
+<table>
+<tr>
+<td align="center" width="25%">
 
-> **Every module includes:** 📖 Concepts → 🔧 Hands-on Labs → 🏢 Real-world Use Cases → ⚠️ Pitfalls → 📚 Further Reading
+### 🔧 DevOps
+**Build & Ship**
+<br />
+CI/CD · Containers · K8s
+IaC · GitOps · Platform
+
+</td>
+<td align="center" width="25%">
+
+### ☁️ Cloud
+**Deploy Anywhere**
+<br />
+AWS · Azure · GCP
+Multi-Cloud · Cost Ops
+
+</td>
+<td align="center" width="25%">
+
+### 🔥 SRE
+**Run & Reliability**
+<br />
+SLOs · Observability
+Chaos · Incidents
+
+</td>
+<td align="center" width="25%">
+
+### 🤖 AIOps
+**Intelligent Ops**
+<br />
+Anomaly Detection
+LLMOps · Prediction
+
+</td>
+</tr>
+</table>
+
+> **📖 Every module includes:** Concepts → 🔧 Hands-on Labs → 🏢 Real-world Cases → ⚠️ Pitfalls → 📚 Further Reading
 
 ---
 
 ## 🗺️ Learning Roadmap
 
+> **Follow the path. Master each phase. Become production-ready.** 🚀
+
 ```mermaid
 graph TD
-    START["🚀 Start Here"] --> LINUX["🐧 Linux Fundamentals"]
-    START --> NET["🌐 Networking Basics"]
-    
-    LINUX --> GIT["📦 Git & Version Control"]
-    NET --> GIT
-    
-    GIT --> CICD["⚡ CI/CD Pipelines"]
-    GIT --> DOCKER["🐳 Containerization"]
-    
-    CICD --> K8S["☸️ Container Orchestration"]
-    DOCKER --> K8S
-    
-    K8S --> IAC["🏗️ Infrastructure as Code"]
-    K8S --> GITOPS["🔄 GitOps"]
-    
-    IAC --> PLATENG["🏭 Platform Engineering"]
-    GITOPS --> PLATENG
-    
-    PLATENG --> SRE_FUND["📘 SRE Fundamentals"]
-    
-    SRE_FUND --> SLOS["📊 SLOs / SLAs / SLIs"]
-    SRE_FUND --> OBS["🔭 Observability"]
-    
-    SLOS --> INCIDENT["🚨 Incident Management"]
-    OBS --> INCIDENT
-    
-    INCIDENT --> CHAOS["💥 Chaos Engineering"]
-    INCIDENT --> CAPACITY["📈 Capacity Planning"]
-    
-    CHAOS --> TOIL["🤖 Toil Reduction"]
-    CAPACITY --> TOIL
-    
-    TOIL --> AIOPS_FUND["🧠 AIOps Fundamentals"]
-    
-    AIOPS_FUND --> ANOMALY["📉 Anomaly Detection"]
-    AIOPS_FUND --> ALERT["🔔 Intelligent Alerting"]
-    
-    ANOMALY --> LOG["📝 Log Intelligence"]
-    ALERT --> LOG
-    
-    LOG --> LLMOPS["🤖 LLMOps"]
-    LOG --> PREDICT["⚡ Predictive Scaling"]
-    
-    LLMOPS --> MASTER["🏆 SRE Master"]
-    PREDICT --> MASTER
+    START["🚀 START HERE"]:::start
 
-    style START fill:#00d4ff,stroke:#0097a7,color:#000,stroke-width:2px
-    style MASTER fill:#f4c542,stroke:#f9a825,color:#000,stroke-width:3px
-    style LINUX fill:#1a1a2e,stroke:#4fc3f7,color:#fff
-    style NET fill:#1a1a2e,stroke:#4fc3f7,color:#fff
-    style GIT fill:#1a1a2e,stroke:#4fc3f7,color:#fff
-    style CICD fill:#16213e,stroke:#7c4dff,color:#fff
-    style DOCKER fill:#16213e,stroke:#7c4dff,color:#fff
-    style K8S fill:#16213e,stroke:#7c4dff,color:#fff
-    style IAC fill:#16213e,stroke:#7c4dff,color:#fff
-    style GITOPS fill:#16213e,stroke:#7c4dff,color:#fff
-    style PLATENG fill:#0f3460,stroke:#00e676,color:#fff
-    style SRE_FUND fill:#1b1b2f,stroke:#e94560,color:#fff
-    style SLOS fill:#1b1b2f,stroke:#e94560,color:#fff
-    style OBS fill:#1b1b2f,stroke:#e94560,color:#fff
-    style INCIDENT fill:#1b1b2f,stroke:#e94560,color:#fff
-    style CHAOS fill:#1b1b2f,stroke:#e94560,color:#fff
-    style CAPACITY fill:#1b1b2f,stroke:#e94560,color:#fff
-    style TOIL fill:#1b1b2f,stroke:#e94560,color:#fff
-    style AIOPS_FUND fill:#162447,stroke:#f4c542,color:#fff
-    style ANOMALY fill:#162447,stroke:#f4c542,color:#fff
-    style ALERT fill:#162447,stroke:#f4c542,color:#fff
-    style LOG fill:#162447,stroke:#f4c542,color:#fff
-    style LLMOPS fill:#162447,stroke:#f4c542,color:#fff
-    style PREDICT fill:#162447,stroke:#f4c542,color:#fff
+    START --> PHASE1
+
+    subgraph PHASE1["  🟢 PHASE 1 — Foundations  "]
+        LINUX["🐧 Linux<br/>Fundamentals"]:::green
+        NET["🌐 Networking<br/>Basics"]:::green
+        GIT["📦 Git & Version<br/>Control"]:::green
+        LINUX --> GIT
+        NET --> GIT
+    end
+
+    PHASE1 --> PHASE2
+
+    subgraph PHASE2["  🔵 PHASE 2 — Build & Ship  "]
+        CICD["⚡ CI/CD<br/>Pipelines"]:::blue
+        DOCKER["🐳 Containers<br/>& Docker"]:::blue
+        K8S["☸️ Kubernetes<br/>& Helm"]:::blue
+        CICD --> K8S
+        DOCKER --> K8S
+    end
+
+    PHASE2 --> PHASE3
+
+    subgraph PHASE3["  🟣 PHASE 3 — Infrastructure  "]
+        IAC["🏗️ Infrastructure<br/>as Code"]:::purple
+        GITOPS["🔄 GitOps<br/>ArgoCD"]:::purple
+        CLOUD["☁️ Cloud<br/>AWS / Azure / GCP"]:::purple
+        IAC --> CLOUD
+        GITOPS --> CLOUD
+    end
+
+    PHASE3 --> PHASE4
+
+    subgraph PHASE4["  🔴 PHASE 4 — Reliability  "]
+        SRE["📘 SRE<br/>Fundamentals"]:::red
+        SLOS["📊 SLOs<br/>& Error Budgets"]:::red
+        OBS["🔭 Observability<br/>Metrics · Logs · Traces"]:::red
+        INCIDENT["🚨 Incident<br/>Management"]:::red
+        CHAOS["💥 Chaos<br/>Engineering"]:::red
+        SRE --> SLOS
+        SRE --> OBS
+        SLOS --> INCIDENT
+        OBS --> INCIDENT
+        INCIDENT --> CHAOS
+    end
+
+    PHASE4 --> PHASE5
+
+    subgraph PHASE5["  🟡 PHASE 5 — Intelligent Ops  "]
+        AIOPS["🧠 AIOps<br/>Fundamentals"]:::gold
+        ANOMALY["📉 Anomaly<br/>Detection"]:::gold
+        LOG["📝 Log<br/>Intelligence"]:::gold
+        LLMOPS["🤖 LLMOps"]:::gold
+        PREDICT["⚡ Predictive<br/>Scaling"]:::gold
+        AIOPS --> ANOMALY
+        AIOPS --> LOG
+        ANOMALY --> LLMOPS
+        LOG --> PREDICT
+    end
+
+    PHASE5 --> FINISH["🏆 PRODUCTION-READY<br/>ENGINEER"]:::finish
+
+    classDef start fill:#00d4ff,stroke:#0097a7,color:#000,stroke-width:3px,font-weight:bold
+    classDef green fill:#1a1a2e,stroke:#4caf50,color:#fff,stroke-width:2px
+    classDef blue fill:#16213e,stroke:#42a5f5,color:#fff,stroke-width:2px
+    classDef purple fill:#1b1040,stroke:#ab47bc,color:#fff,stroke-width:2px
+    classDef red fill:#2a0a0a,stroke:#ef5350,color:#fff,stroke-width:2px
+    classDef gold fill:#1a1500,stroke:#ffc107,color:#fff,stroke-width:2px
+    classDef finish fill:#f4c542,stroke:#f9a825,color:#000,stroke-width:3px,font-weight:bold
 ```
+
+<p align="center">
+  <sub>🟢 Foundations → 🔵 Build & Ship → 🟣 Infrastructure → 🔴 Reliability → 🟡 Intelligent Ops → 🏆 Production-Ready</sub>
+</p>
 
 ---
 
