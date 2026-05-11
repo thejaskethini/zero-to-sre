@@ -1,0 +1,66 @@
+# =============================================================================
+# 🐳 .dockerignore — Exclude files from Docker build context
+# =============================================================================
+# This file prevents unnecessary files from being sent to the Docker daemon
+# during build, which:
+#   1. Speeds up builds significantly
+#   2. Reduces final image size
+#   3. Prevents secrets from leaking into images
+# =============================================================================
+
+# --- Version Control ---
+.git
+.gitignore
+
+# --- Dependencies (rebuilt in container) ---
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Build Output (rebuilt in container) ---
+dist
+build
+.next
+
+# --- Environment & Secrets ---
+.env
+.env.*
+*.pem
+*.key
+
+# --- IDE & Editor ---
+.vscode
+.idea
+*.swp
+*.swo
+
+# --- Docker ---
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# --- Documentation ---
+README.md
+CONTRIBUTING.md
+LICENSE
+docs/
+
+# --- Tests (not needed in production image) ---
+__tests__
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
+coverage
+.nyc_output
+jest.config.*
+
+# --- CI/CD ---
+.github
+.gitlab-ci.yml
+Jenkinsfile
+
+# --- OS ---
+.DS_Store
+Thumbs.db

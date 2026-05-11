@@ -1,0 +1,137 @@
+# =============================================================================
+# 🚀 Basic CI Pipeline — GitHub Actions
+# =============================================================================
+# Description: A foundational CI pipeline that builds, tests, and lints code
+#              on every push and pull request.
+#
+# Usage: Place this file at .github/workflows/ci.yml in your repository
+#
+# What it does:
+#   1. Checks out code
+#   2. Sets up Node.js with dependency caching
+#   3. Installs dependencies
+#   4. Runs linter
+#   5. Runs unit tests with coverage
+#   6. Uploads coverage report as artifact
+# =============================================================================
+
+name: "🔨 CI Pipeline"
+
+# ─── Triggers ────────────────────────────────────────────────────────────────
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  # Allow manual triggering from the Actions tab
+  workflow_dispatch:
+
+# ─── Environment Variables ───────────────────────────────────────────────────
+env:
+  NODE_VERSION: "20"
+  # Reduce npm install noise
+  CI: true
+
+# ─── Permissions ─────────────────────────────────────────────────────────────
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+# ─── Jobs ────────────────────────────────────────────────────────────────────
+jobs:
+  # ┌─────────────────────────────────────────────────────────────────────────┐
+  # │ LINT — Static Analysis                                                  │
+  # └─────────────────────────────────────────────────────────────────────────┘
+  lint:
+    name: "🔍 Lint & Format Check"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "📥 Checkout code"
+        uses: actions/checkout@v4
+
+      - name: "📦 Setup Node.js"
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: "📦 Install dependencies"
+        run: npm ci
+        # 'npm ci' is preferred over 'npm install' in CI because:
+        # - It's faster (skips the package resolution step)
+        # - It's stricter (requires exact lockfile match)
+        # - It always does a clean install
+
+      - name: "🔍 Run ESLint"
+        run: npm run lint
+
+      - name: "✨ Check formatting"
+        run: npm run format:check
+
+  # ┌─────────────────────────────────────────────────────────────────────────┐
+  # │ TEST — Unit & Integration Tests                                         │
+  # └─────────────────────────────────────────────────────────────────────────┘
+  test:
+    name: "🧪 Run Tests"
+    runs-on: ubuntu-latest
+    needs: lint  # Only test if lint passes
+    strategy:
+      # Test against multiple Node.js versions for compatibility
+      matrix:
+        node-version: [18, 20, 22]
+    steps:
+      - name: "📥 Checkout code"
+        uses: actions/checkout@v4
+
+      - name: "📦 Setup Node.js ${{ matrix.node-version }}"
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      - name: "📦 Install dependencies"
+        run: npm ci
+
+      - name: "🧪 Run unit tests with coverage"
+        run: npm test -- --coverage --ci
+        # --coverage: Generate code coverage report
+        # --ci: Optimized for CI environments (fails on missing snapshots)
+
+      - name: "📊 Upload coverage report"
+        if: matrix.node-version == 20  # Only upload once
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+
+  # ┌─────────────────────────────────────────────────────────────────────────┐
+  # │ BUILD — Verify Build                                                    │
+  # └─────────────────────────────────────────────────────────────────────────┘
+  build:
+    name: "🔨 Build"
+    runs-on: ubuntu-latest
+    needs: test  # Only build if tests pass
+    steps:
+      - name: "📥 Checkout code"
+        uses: actions/checkout@v4
+
+      - name: "📦 Setup Node.js"
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: "📦 Install dependencies"
+        run: npm ci
+
+      - name: "🔨 Build application"
+        run: npm run build
+
+      - name: "📊 Upload build artifacts"
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: dist/
+          retention-days: 3

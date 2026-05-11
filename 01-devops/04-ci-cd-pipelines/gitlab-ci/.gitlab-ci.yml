@@ -1,0 +1,170 @@
+# =============================================================================
+# 🚀 GitLab CI/CD Pipeline
+# =============================================================================
+# Description: A production-grade GitLab CI pipeline with:
+#   - Multi-stage pipeline (build → test → security → deploy)
+#   - Docker image build with Kaniko (no Docker-in-Docker needed)
+#   - Environment-specific deployments
+#   - Merge request pipelines
+#
+# Usage: Place this file as '.gitlab-ci.yml' at the root of your repository
+# =============================================================================
+
+# ─── Global Settings ────────────────────────────────────────────────────────
+default:
+  image: node:20-alpine
+  # Cache node_modules between jobs for speed
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - node_modules/
+      - .npm/
+
+# ─── Variables ───────────────────────────────────────────────────────────────
+variables:
+  REGISTRY: registry.gitlab.com
+  IMAGE_NAME: ${CI_PROJECT_PATH}
+  # Use npm cache directory for faster installs
+  npm_config_cache: "$CI_PROJECT_DIR/.npm"
+
+# ─── Pipeline Stages ────────────────────────────────────────────────────────
+stages:
+  - build
+  - test
+  - security
+  - docker
+  - deploy
+
+# =============================================================================
+# BUILD STAGE
+# =============================================================================
+build:
+  stage: build
+  script:
+    - npm ci --prefer-offline
+    - npm run build
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 hour
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+
+# =============================================================================
+# TEST STAGE
+# =============================================================================
+lint:
+  stage: test
+  script:
+    - npm ci --prefer-offline
+    - npm run lint
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+
+unit-tests:
+  stage: test
+  script:
+    - npm ci --prefer-offline
+    - npm test -- --coverage --ci
+  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
+  artifacts:
+    when: always
+    reports:
+      junit: test-results/junit.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
+    paths:
+      - coverage/
+    expire_in: 7 days
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+
+# =============================================================================
+# SECURITY STAGE
+# =============================================================================
+dependency-scan:
+  stage: security
+  script:
+    - npm audit --production --audit-level=high
+  allow_failure: true  # Don't block pipeline, but flag the issue
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+sast:
+  stage: security
+  image: 
+    name: "semgrep/semgrep:latest"
+    entrypoint: [""]
+  script:
+    - semgrep scan --config auto --json --output semgrep-results.json .
+  artifacts:
+    paths:
+      - semgrep-results.json
+    expire_in: 30 days
+  allow_failure: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+# =============================================================================
+# DOCKER STAGE — Build & Push Image
+# =============================================================================
+docker-build:
+  stage: docker
+  image:
+    # Kaniko: Build Docker images without Docker daemon (safer in CI)
+    name: gcr.io/kaniko-project/executor:v1.9.0-debug
+    entrypoint: [""]
+  script:
+    - |
+      /kaniko/executor \
+        --context "${CI_PROJECT_DIR}" \
+        --dockerfile "${CI_PROJECT_DIR}/Dockerfile" \
+        --destination "${REGISTRY}/${IMAGE_NAME}:${CI_COMMIT_SHORT_SHA}" \
+        --destination "${REGISTRY}/${IMAGE_NAME}:latest" \
+        --cache=true \
+        --cache-ttl=168h
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+# =============================================================================
+# DEPLOY STAGES
+# =============================================================================
+deploy-staging:
+  stage: deploy
+  image: bitnami/kubectl:latest
+  environment:
+    name: staging
+    url: https://staging.example.com
+  script:
+    - echo "${KUBE_CONFIG_STAGING}" | base64 -d > kubeconfig
+    - export KUBECONFIG=kubeconfig
+    - |
+      kubectl set image deployment/app \
+        app=${REGISTRY}/${IMAGE_NAME}:${CI_COMMIT_SHORT_SHA} \
+        --namespace=staging
+    - kubectl rollout status deployment/app --namespace=staging --timeout=300s
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+deploy-production:
+  stage: deploy
+  image: bitnami/kubectl:latest
+  environment:
+    name: production
+    url: https://example.com
+  script:
+    - echo "${KUBE_CONFIG_PRODUCTION}" | base64 -d > kubeconfig
+    - export KUBECONFIG=kubeconfig
+    - |
+      kubectl set image deployment/app \
+        app=${REGISTRY}/${IMAGE_NAME}:${CI_COMMIT_TAG} \
+        --namespace=production
+    - kubectl rollout status deployment/app --namespace=production --timeout=600s
+  rules:
+    # Only deploy to production on tagged releases
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
+  when: manual  # Requires manual click to deploy

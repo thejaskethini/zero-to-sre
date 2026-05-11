@@ -1,0 +1,288 @@
+# =============================================================================
+# 🔧 Ansible Playbook — Server Hardening & Application Deployment
+# =============================================================================
+# Description:
+#   Production-ready Ansible playbook that:
+#   1. Hardens the server (SSH, firewall, users)
+#   2. Installs Docker & Docker Compose
+#   3. Deploys the application
+#   4. Sets up monitoring (node exporter)
+#
+# Prerequisites:
+#   pip install ansible
+#   ansible-galaxy collection install community.docker
+#
+# Usage:
+#   # Test connectivity
+#   ansible -i inventory.yml all -m ping
+#
+#   # Dry run
+#   ansible-playbook -i inventory.yml deploy.yml --check
+#
+#   # Deploy
+#   ansible-playbook -i inventory.yml deploy.yml
+#
+#   # Deploy specific tags
+#   ansible-playbook -i inventory.yml deploy.yml --tags "deploy"
+#
+# Inventory file (inventory.yml):
+#   all:
+#     hosts:
+#       web1:
+#         ansible_host: 10.0.1.10
+#       web2:
+#         ansible_host: 10.0.1.11
+#     vars:
+#       ansible_user: ubuntu
+#       ansible_ssh_private_key_file: ~/.ssh/id_rsa
+# =============================================================================
+
+---
+- name: Server Hardening & Application Deployment
+  hosts: all
+  become: true  # Run as root
+  vars:
+    app_name: "myapp"
+    app_port: 3000
+    docker_compose_version: "2.24.0"
+    node_exporter_version: "1.7.0"
+    allowed_ssh_users:
+      - ubuntu
+      - deploy
+    firewall_allowed_ports:
+      - "22/tcp"    # SSH
+      - "80/tcp"    # HTTP
+      - "443/tcp"   # HTTPS
+      - "9100/tcp"  # Node Exporter (monitoring)
+
+  tasks:
+    # ═══════════════════════════════════════════════════════════════════════
+    # PHASE 1: System Hardening
+    # ═══════════════════════════════════════════════════════════════════════
+
+    - name: Update all packages
+      apt:
+        update_cache: yes
+        upgrade: safe
+        cache_valid_time: 3600
+      tags: [hardening]
+
+    - name: Install essential packages
+      apt:
+        name:
+          - ufw
+          - fail2ban
+          - unattended-upgrades
+          - curl
+          - wget
+          - htop
+          - jq
+          - net-tools
+        state: present
+      tags: [hardening]
+
+    # --- SSH Hardening ---
+    - name: Harden SSH configuration
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        validate: "sshd -t -f %s"
+      loop:
+        - { regexp: '^#?PermitRootLogin', line: 'PermitRootLogin no' }
+        - { regexp: '^#?PasswordAuthentication', line: 'PasswordAuthentication no' }
+        - { regexp: '^#?X11Forwarding', line: 'X11Forwarding no' }
+        - { regexp: '^#?MaxAuthTries', line: 'MaxAuthTries 3' }
+        - { regexp: '^#?ClientAliveInterval', line: 'ClientAliveInterval 300' }
+        - { regexp: '^#?ClientAliveCountMax', line: 'ClientAliveCountMax 2' }
+      notify: Restart SSH
+      tags: [hardening]
+
+    # --- Firewall ---
+    - name: Configure UFW defaults
+      ufw:
+        direction: "{{ item.direction }}"
+        policy: "{{ item.policy }}"
+      loop:
+        - { direction: incoming, policy: deny }
+        - { direction: outgoing, policy: allow }
+      tags: [hardening]
+
+    - name: Allow required ports through UFW
+      ufw:
+        rule: allow
+        port: "{{ item.split('/')[0] }}"
+        proto: "{{ item.split('/')[1] }}"
+      loop: "{{ firewall_allowed_ports }}"
+      tags: [hardening]
+
+    - name: Enable UFW
+      ufw:
+        state: enabled
+      tags: [hardening]
+
+    # --- Fail2Ban ---
+    - name: Enable and start Fail2Ban
+      systemd:
+        name: fail2ban
+        enabled: yes
+        state: started
+      tags: [hardening]
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # PHASE 2: Docker Installation
+    # ═══════════════════════════════════════════════════════════════════════
+
+    - name: Install Docker prerequisites
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - gnupg
+          - lsb-release
+        state: present
+      tags: [docker]
+
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+      tags: [docker]
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+      tags: [docker]
+
+    - name: Install Docker
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+        state: present
+        update_cache: yes
+      tags: [docker]
+
+    - name: Add deploy user to docker group
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes
+      tags: [docker]
+
+    - name: Enable Docker service
+      systemd:
+        name: docker
+        enabled: yes
+        state: started
+      tags: [docker]
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # PHASE 3: Application Deployment
+    # ═══════════════════════════════════════════════════════════════════════
+
+    - name: Create application directory
+      file:
+        path: "/opt/{{ app_name }}"
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: "0755"
+      tags: [deploy]
+
+    - name: Copy docker-compose file
+      copy:
+        src: "files/docker-compose.yml"
+        dest: "/opt/{{ app_name }}/docker-compose.yml"
+        owner: "{{ ansible_user }}"
+        mode: "0644"
+      tags: [deploy]
+
+    - name: Copy environment file
+      template:
+        src: "templates/env.j2"
+        dest: "/opt/{{ app_name }}/.env"
+        owner: "{{ ansible_user }}"
+        mode: "0600"  # Restrictive — contains secrets
+      tags: [deploy]
+
+    - name: Pull and deploy application
+      community.docker.docker_compose_v2:
+        project_src: "/opt/{{ app_name }}"
+        pull: "always"
+        state: present
+      tags: [deploy]
+
+    - name: Wait for application to be healthy
+      uri:
+        url: "http://localhost:{{ app_port }}/health"
+        status_code: 200
+      register: health_check
+      retries: 10
+      delay: 5
+      until: health_check.status == 200
+      tags: [deploy]
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # PHASE 4: Monitoring Setup
+    # ═══════════════════════════════════════════════════════════════════════
+
+    - name: Download Node Exporter
+      get_url:
+        url: "https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter_version }}/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz"
+        dest: "/tmp/node_exporter.tar.gz"
+      tags: [monitoring]
+
+    - name: Extract Node Exporter
+      unarchive:
+        src: "/tmp/node_exporter.tar.gz"
+        dest: /usr/local/bin/
+        remote_src: yes
+        extra_opts: ["--strip-components=1"]
+      tags: [monitoring]
+
+    - name: Create Node Exporter systemd service
+      copy:
+        content: |
+          [Unit]
+          Description=Prometheus Node Exporter
+          After=network.target
+
+          [Service]
+          Type=simple
+          User=nobody
+          ExecStart=/usr/local/bin/node_exporter
+          Restart=always
+          RestartSec=5
+
+          [Install]
+          WantedBy=multi-user.target
+        dest: /etc/systemd/system/node_exporter.service
+      notify: Restart Node Exporter
+      tags: [monitoring]
+
+    - name: Enable Node Exporter
+      systemd:
+        name: node_exporter
+        enabled: yes
+        state: started
+        daemon_reload: yes
+      tags: [monitoring]
+
+  # ═══════════════════════════════════════════════════════════════════════
+  # HANDLERS
+  # ═══════════════════════════════════════════════════════════════════════
+
+  handlers:
+    - name: Restart SSH
+      systemd:
+        name: sshd
+        state: restarted
+
+    - name: Restart Node Exporter
+      systemd:
+        name: node_exporter
+        state: restarted
+        daemon_reload: yes

@@ -1,0 +1,131 @@
+# =============================================================================
+# 📊 Prometheus Configuration
+# =============================================================================
+# Description: Production-ready Prometheus configuration with:
+#   - Multiple scrape targets (app, node exporter, Prometheus self)
+#   - Alerting rules integration
+#   - Relabeling for cleaner metrics
+#
+# Usage: Mount this file at /etc/prometheus/prometheus.yml in your
+#        Prometheus container or deployment.
+#
+# Reference: https://prometheus.io/docs/prometheus/latest/configuration/
+# =============================================================================
+
+# ─── Global Configuration ───────────────────────────────────────────────────
+global:
+  # How often Prometheus scrapes targets
+  # Pro Tip: 15s is good for most cases. Don't go below 10s unless needed.
+  scrape_interval: 15s
+  
+  # How often rules (alerting/recording) are evaluated
+  evaluation_interval: 15s
+
+  # Attach these labels to any time series or alert when communicating with
+  # external systems (federation, remote storage, Alertmanager)
+  external_labels:
+    cluster: "zero-to-sre"
+    environment: "development"
+
+# ─── Alerting Configuration ─────────────────────────────────────────────────
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - "alertmanager:9093"
+      # How long to wait before sending alerts after a group is created
+      timeout: 10s
+
+# ─── Rule Files ──────────────────────────────────────────────────────────────
+# Load alert and recording rules from these files
+rule_files:
+  - "alert-rules.yml"
+  # - "recording-rules.yml"  # Uncomment if you have recording rules
+
+# ─── Scrape Configurations ──────────────────────────────────────────────────
+scrape_configs:
+  # ┌─────────────────────────────────────────────────────────────────────┐
+  # │ Prometheus Self-Monitoring                                          │
+  # └─────────────────────────────────────────────────────────────────────┘
+  # Always monitor Prometheus itself — "Who watches the watchmen?"
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+        labels:
+          service: "prometheus"
+
+  # ┌─────────────────────────────────────────────────────────────────────┐
+  # │ Application Metrics                                                 │
+  # └─────────────────────────────────────────────────────────────────────┘
+  - job_name: "application"
+    # Override global scrape interval for this job
+    scrape_interval: 10s
+    
+    # Metrics endpoint path (default is /metrics)
+    metrics_path: "/metrics"
+    
+    static_configs:
+      - targets:
+          - "api:3000"           # Main API service
+          # - "worker:3001"      # Background worker
+          # - "gateway:8080"     # API Gateway
+        labels:
+          team: "backend"
+
+    # Relabeling: Add/modify labels before storing
+    # This is powerful for organizing metrics
+    relabel_configs:
+      # Add instance hostname as a label
+      - source_labels: [__address__]
+        target_label: instance
+        regex: "(.+):\\d+"
+        replacement: "$1"
+
+  # ┌─────────────────────────────────────────────────────────────────────┐
+  # │ Node Exporter — Host-level metrics (CPU, memory, disk)             │
+  # └─────────────────────────────────────────────────────────────────────┘
+  - job_name: "node-exporter"
+    scrape_interval: 30s  # Host metrics don't change as fast
+    static_configs:
+      - targets:
+          - "node-exporter:9100"
+        labels:
+          service: "infrastructure"
+
+  # ┌─────────────────────────────────────────────────────────────────────┐
+  # │ Redis Exporter                                                      │
+  # └─────────────────────────────────────────────────────────────────────┘
+  - job_name: "redis"
+    static_configs:
+      - targets:
+          - "redis-exporter:9121"
+        labels:
+          service: "cache"
+
+  # ┌─────────────────────────────────────────────────────────────────────┐
+  # │ PostgreSQL Exporter                                                 │
+  # └─────────────────────────────────────────────────────────────────────┘
+  - job_name: "postgres"
+    static_configs:
+      - targets:
+          - "postgres-exporter:9187"
+        labels:
+          service: "database"
+
+  # ┌─────────────────────────────────────────────────────────────────────┐
+  # │ Kubernetes Service Discovery (uncomment for K8s)                    │
+  # └─────────────────────────────────────────────────────────────────────┘
+  # - job_name: "kubernetes-pods"
+  #   kubernetes_sd_configs:
+  #     - role: pod
+  #   relabel_configs:
+  #     # Only scrape pods with annotation: prometheus.io/scrape: "true"
+  #     - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+  #       action: keep
+  #       regex: true
+  #     # Use custom port from annotation: prometheus.io/port
+  #     - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_port]
+  #       action: replace
+  #       target_label: __address__
+  #       regex: (.+)
+  #       replacement: "$1"

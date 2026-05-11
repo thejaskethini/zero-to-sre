@@ -1,0 +1,89 @@
+# =============================================================================
+# 🐳 Production Multi-Stage Dockerfile
+# =============================================================================
+# Description: A production-optimized Dockerfile using multi-stage builds
+#              to create a minimal, secure container image.
+#
+# Usage:
+#   docker build -f Dockerfile.multistage -t myapp:latest .
+#   docker run -d -p 3000:3000 myapp:latest
+#
+# Image Size Comparison:
+#   Without multi-stage: ~800MB
+#   With multi-stage:    ~50MB  (93% reduction!)
+# =============================================================================
+
+# ─── Stage 1: Dependencies ──────────────────────────────────────────────────
+# Purpose: Install ALL dependencies (including devDependencies for building)
+# Why separate: This layer is cached and only rebuilds when package.json changes
+FROM node:20-alpine AS deps
+
+WORKDIR /app
+
+# Copy only package files first (leverages Docker layer caching)
+# If package.json hasn't changed, this entire stage is cached
+COPY package.json package-lock.json ./
+
+# Install dependencies
+# --frozen-lockfile: Ensures reproducible builds (fails if lockfile is outdated)
+RUN npm ci --frozen-lockfile
+
+# ─── Stage 2: Builder ───────────────────────────────────────────────────────
+# Purpose: Build the application (compile TypeScript, bundle, etc.)
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy dependencies from previous stage
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy source code
+COPY . .
+
+# Build the application
+RUN npm run build
+
+# Remove devDependencies after build (only keep production deps)
+RUN npm prune --production
+
+# ─── Stage 3: Production ────────────────────────────────────────────────────
+# Purpose: Create the final, minimal production image
+FROM node:20-alpine AS production
+
+# Add metadata labels (OCI standard)
+LABEL org.opencontainers.image.title="MyApp"
+LABEL org.opencontainers.image.description="Production application"
+LABEL org.opencontainers.image.source="https://github.com/myorg/myapp"
+
+# Set environment
+ENV NODE_ENV=production
+ENV PORT=3000
+
+WORKDIR /app
+
+# Security: Create a non-root user
+# Running as root in containers is a security anti-pattern
+RUN addgroup --system --gid 1001 appgroup && \
+    adduser --system --uid 1001 --ingroup appgroup appuser
+
+# Copy only what's needed for production
+COPY --from=builder --chown=appuser:appgroup /app/dist ./dist
+COPY --from=builder --chown=appuser:appgroup /app/node_modules ./node_modules
+COPY --from=builder --chown=appuser:appgroup /app/package.json ./package.json
+
+# Switch to non-root user
+USER appuser
+
+# Expose the application port
+EXPOSE ${PORT}
+
+# Health check — Docker/K8s will restart if this fails
+# --interval: Check every 30 seconds
+# --timeout: Fail if no response in 3 seconds
+# --retries: Mark unhealthy after 3 consecutive failures
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT}/health || exit 1
+
+# Start the application
+# Use exec form (JSON array) so signals are properly forwarded
+CMD ["node", "dist/index.js"]

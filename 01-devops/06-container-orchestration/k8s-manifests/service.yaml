@@ -1,0 +1,19 @@
+# =============================================================================
+# ☸️ Kubernetes Service
+# =============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp
+  namespace: production
+  labels:
+    app: myapp
+spec:
+  type: ClusterIP  # Internal access only — use Ingress for external
+  ports:
+    - port: 80          # Service port (what other services use)
+      targetPort: 3000   # Container port (where the app listens)
+      protocol: TCP
+      name: http
+  selector:
+    app: myapp  # Routes to pods with this label

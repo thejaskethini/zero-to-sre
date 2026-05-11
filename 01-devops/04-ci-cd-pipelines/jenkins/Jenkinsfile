@@ -1,0 +1,186 @@
+// =============================================================================
+// 🚀 Multi-Stage Jenkins Pipeline
+// =============================================================================
+// Description: A production-grade Jenkinsfile with:
+//   - Parallel test stages
+//   - Docker build with caching
+//   - Security scanning
+//   - Deployment with approval gates
+//
+// Usage: Place this file as 'Jenkinsfile' at the root of your repository
+//
+// Prerequisites:
+//   - Jenkins with Pipeline plugin
+//   - Docker Pipeline plugin
+//   - Credentials configured: 'docker-hub-creds', 'kubeconfig-staging'
+// =============================================================================
+
+pipeline {
+    agent any
+
+    // ─── Environment Variables ──────────────────────────────────────────────
+    environment {
+        REGISTRY = 'docker.io'
+        IMAGE_NAME = 'myorg/myapp'
+        DOCKER_CREDS = credentials('docker-hub-creds')
+        APP_VERSION = "${env.BUILD_NUMBER}-${env.GIT_COMMIT?.take(8) ?: 'unknown'}"
+    }
+
+    // ─── Pipeline Options ───────────────────────────────────────────────────
+    options {
+        // Abort pipeline if it runs longer than 30 minutes
+        timeout(time: 30, unit: 'MINUTES')
+        // Keep only last 10 builds
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        // Don't allow concurrent builds on the same branch
+        disableConcurrentBuilds()
+        // Add timestamps to console output
+        timestamps()
+    }
+
+    // ─── Stages ─────────────────────────────────────────────────────────────
+    stages {
+        // ┌─────────────────────────────────────────────────────────────────┐
+        // │ STAGE 1: Checkout & Setup                                       │
+        // └─────────────────────────────────────────────────────────────────┘
+        stage('📥 Checkout') {
+            steps {
+                checkout scm
+                script {
+                    echo "Building version: ${APP_VERSION}"
+                    echo "Branch: ${env.BRANCH_NAME}"
+                }
+            }
+        }
+
+        // ┌─────────────────────────────────────────────────────────────────┐
+        // │ STAGE 2: Parallel — Lint + Unit Tests + Security Scan           │
+        // └─────────────────────────────────────────────────────────────────┘
+        stage('🧪 Quality Gates') {
+            parallel {
+                stage('🔍 Lint') {
+                    steps {
+                        sh 'npm ci'
+                        sh 'npm run lint'
+                    }
+                }
+                stage('🧪 Unit Tests') {
+                    steps {
+                        sh 'npm ci'
+                        sh 'npm test -- --coverage --ci'
+                    }
+                    post {
+                        always {
+                            // Publish test results
+                            junit 'test-results/**/*.xml'
+                            // Publish coverage report
+                            publishHTML(target: [
+                                reportDir: 'coverage/lcov-report',
+                                reportFiles: 'index.html',
+                                reportName: 'Coverage Report'
+                            ])
+                        }
+                    }
+                }
+                stage('🔒 Security Scan') {
+                    steps {
+                        sh 'npm audit --production --audit-level=high'
+                    }
+                }
+            }
+        }
+
+        // ┌─────────────────────────────────────────────────────────────────┐
+        // │ STAGE 3: Docker Build & Push                                    │
+        // └─────────────────────────────────────────────────────────────────┘
+        stage('🐳 Docker Build') {
+            steps {
+                script {
+                    // Build with cache for faster builds
+                    docker.build("${IMAGE_NAME}:${APP_VERSION}", "--pull .")
+                }
+            }
+        }
+
+        stage('🐳 Docker Push') {
+            when {
+                anyOf {
+                    branch 'main'
+                    buildingTag()
+                }
+            }
+            steps {
+                script {
+                    docker.withRegistry("https://${REGISTRY}", 'docker-hub-creds') {
+                        def image = docker.image("${IMAGE_NAME}:${APP_VERSION}")
+                        image.push()
+                        image.push('latest')
+                    }
+                }
+            }
+        }
+
+        // ┌─────────────────────────────────────────────────────────────────┐
+        // │ STAGE 4: Deploy to Staging                                      │
+        // └─────────────────────────────────────────────────────────────────┘
+        stage('🟡 Deploy Staging') {
+            when {
+                branch 'main'
+            }
+            steps {
+                withCredentials([file(credentialsId: 'kubeconfig-staging', variable: 'KUBECONFIG')]) {
+                    sh """
+                        kubectl set image deployment/app \
+                            app=${REGISTRY}/${IMAGE_NAME}:${APP_VERSION} \
+                            --namespace=staging
+                        kubectl rollout status deployment/app \
+                            --namespace=staging --timeout=300s
+                    """
+                }
+            }
+        }
+
+        // ┌─────────────────────────────────────────────────────────────────┐
+        // │ STAGE 5: Deploy to Production (with approval)                   │
+        // └─────────────────────────────────────────────────────────────────┘
+        stage('🟢 Deploy Production') {
+            when {
+                buildingTag()
+            }
+            steps {
+                // Manual approval gate — someone must click "Proceed"
+                input(
+                    message: '🚀 Deploy to production?',
+                    ok: 'Deploy',
+                    submitter: 'admin,devops-team'
+                )
+                withCredentials([file(credentialsId: 'kubeconfig-production', variable: 'KUBECONFIG')]) {
+                    sh """
+                        kubectl set image deployment/app \
+                            app=${REGISTRY}/${IMAGE_NAME}:${APP_VERSION} \
+                            --namespace=production
+                        kubectl rollout status deployment/app \
+                            --namespace=production --timeout=600s
+                    """
+                }
+            }
+        }
+    }
+
+    // ─── Post Actions ───────────────────────────────────────────────────────
+    post {
+        success {
+            echo '✅ Pipeline completed successfully!'
+            // Uncomment to enable Slack notifications:
+            // slackSend(color: 'good', message: "✅ Build ${APP_VERSION} succeeded")
+        }
+        failure {
+            echo '❌ Pipeline failed!'
+            // slackSend(color: 'danger', message: "❌ Build ${APP_VERSION} failed")
+        }
+        always {
+            // Clean up workspace to save disk space
+            cleanWs()
+        }
+    }
+}

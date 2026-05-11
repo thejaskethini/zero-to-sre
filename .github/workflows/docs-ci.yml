@@ -1,0 +1,115 @@
+# =============================================================================
+# 🔄 GitHub Actions — Documentation CI
+# =============================================================================
+# Validates markdown files, checks links, and ensures quality.
+#
+# Triggers on: push and PR to main
+# =============================================================================
+
+name: 📝 Docs CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**.md'
+      - '**.yml'
+      - '**.yaml'
+  pull_request:
+    branches: [main]
+    paths:
+      - '**.md'
+
+permissions:
+  contents: read
+
+jobs:
+  # ─── Markdown Lint ────────────────────────────────────────────────────
+  markdown-lint:
+    name: 📋 Markdown Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint Markdown files
+        uses: DavidAnson/markdownlint-cli2-action@v16
+        with:
+          config: |
+            {
+              "MD013": false,
+              "MD033": false,
+              "MD041": false,
+              "MD024": false,
+              "MD036": false
+            }
+          globs: |
+            **/*.md
+            !node_modules
+
+  # ─── Link Check ──────────────────────────────────────────────────────
+  link-check:
+    name: 🔗 Link Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check internal links
+        uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          use-quiet-mode: 'yes'
+          config-file: '.github/mlc-config.json'
+        continue-on-error: true  # Don't fail on external links
+
+  # ─── YAML Lint ───────────────────────────────────────────────────────
+  yaml-lint:
+    name: 📄 YAML Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint YAML files
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          file_or_dir: '.'
+          config_data: |
+            extends: default
+            rules:
+              line-length:
+                max: 200
+              truthy:
+                check-keys: false
+              comments:
+                min-spaces-from-content: 1
+
+  # ─── Security Scan ──────────────────────────────────────────────────
+  security:
+    name: 🔒 Security Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for secrets in code
+        uses: trufflesecurity/trufflehog@main
+        with:
+          extra_args: --only-verified
+        continue-on-error: true
+
+  # ─── Stats ──────────────────────────────────────────────────────────
+  stats:
+    name: 📊 Repo Stats
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Repository statistics
+        run: |
+          echo "## 📊 Repository Stats" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Total files | $(find . -type f -not -path './.git/*' | wc -l) |" >> $GITHUB_STEP_SUMMARY
+          echo "| Markdown files | $(find . -name '*.md' -not -path './.git/*' | wc -l) |" >> $GITHUB_STEP_SUMMARY
+          echo "| YAML files | $(find . -name '*.yml' -o -name '*.yaml' -not -path './.git/*' | wc -l) |" >> $GITHUB_STEP_SUMMARY
+          echo "| Python scripts | $(find . -name '*.py' -not -path './.git/*' | wc -l) |" >> $GITHUB_STEP_SUMMARY
+          echo "| Total lines | $(find . -type f -not -path './.git/*' -exec cat {} \; | wc -l) |" >> $GITHUB_STEP_SUMMARY

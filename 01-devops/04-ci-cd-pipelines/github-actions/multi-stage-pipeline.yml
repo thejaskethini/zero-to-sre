@@ -1,0 +1,230 @@
+# =============================================================================
+# 🚀 Multi-Stage Production Pipeline — GitHub Actions
+# =============================================================================
+# Description: A production-grade CI/CD pipeline with:
+#   - Build & test
+#   - Security scanning (Trivy, CodeQL)
+#   - Docker image build & push
+#   - Staging deployment with smoke tests
+#   - Production deployment with manual approval
+#
+# Usage: Place this file at .github/workflows/deploy.yml in your repository
+#
+# Required Secrets:
+#   - DOCKER_USERNAME: Docker Hub username
+#   - DOCKER_PASSWORD: Docker Hub access token
+#   - KUBE_CONFIG_STAGING: Base64-encoded kubeconfig for staging
+#   - KUBE_CONFIG_PRODUCTION: Base64-encoded kubeconfig for production
+#   - SLACK_WEBHOOK_URL: Slack webhook for notifications
+# =============================================================================
+
+name: "🚀 Deploy Pipeline"
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*.*.*"]
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: ${{ github.repository }}
+  NODE_VERSION: "20"
+
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+
+jobs:
+  # ┌─────────────────────────────────────────────────────────────────────────┐
+  # │ STAGE 1: Build & Test                                                   │
+  # └─────────────────────────────────────────────────────────────────────────┘
+  build-and-test:
+    name: "🔨 Build & Test"
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test -- --coverage --ci
+      - run: npm run build
+
+      # Determine version from git tag or commit SHA
+      - name: "🏷️ Determine version"
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          else
+            echo "version=sha-${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
+          fi
+
+  # ┌─────────────────────────────────────────────────────────────────────────┐
+  # │ STAGE 2: Security Scan                                                  │
+  # └─────────────────────────────────────────────────────────────────────────┘
+  security-scan:
+    name: "🔒 Security Scan"
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    steps:
+      - uses: actions/checkout@v4
+
+      # Scan dependencies for known vulnerabilities
+      - name: "🔍 Run Trivy vulnerability scanner"
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-results.sarif"
+          severity: "CRITICAL,HIGH"
+
+      # Upload results to GitHub Security tab
+      - name: "📊 Upload Trivy scan results"
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: "trivy-results.sarif"
+
+  # ┌─────────────────────────────────────────────────────────────────────────┐
+  # │ STAGE 3: Docker Build & Push                                            │
+  # └─────────────────────────────────────────────────────────────────────────┘
+  docker:
+    name: "🐳 Docker Build & Push"
+    runs-on: ubuntu-latest
+    needs: [build-and-test, security-scan]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "🔧 Set up Docker Buildx"
+        uses: docker/setup-buildx-action@v3
+
+      - name: "🔑 Login to Docker Hub"
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # Extract metadata for Docker image tagging
+      - name: "🏷️ Extract metadata"
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=sha,prefix=sha-
+
+      - name: "🔨 Build and push Docker image"
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Scan the built image for vulnerabilities
+      - name: "🔍 Scan Docker image"
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}"
+          format: "table"
+          severity: "CRITICAL,HIGH"
+          exit-code: "1"
+
+  # ┌─────────────────────────────────────────────────────────────────────────┐
+  # │ STAGE 4: Deploy to Staging                                              │
+  # └─────────────────────────────────────────────────────────────────────────┘
+  deploy-staging:
+    name: "🟡 Deploy to Staging"
+    runs-on: ubuntu-latest
+    needs: docker
+    environment:
+      name: staging
+      url: https://staging.example.com
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "☸️ Set up kubectl"
+        uses: azure/setup-kubectl@v3
+
+      - name: "🔑 Configure Kubernetes"
+        run: |
+          echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > kubeconfig
+          echo "KUBECONFIG=$(pwd)/kubeconfig" >> $GITHUB_ENV
+
+      - name: "🚀 Deploy to staging"
+        run: |
+          kubectl set image deployment/app \
+            app=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }} \
+            --namespace=staging
+          kubectl rollout status deployment/app --namespace=staging --timeout=300s
+
+      - name: "🧪 Run smoke tests"
+        run: |
+          # Wait for service to be ready
+          sleep 30
+          # Health check
+          curl -f https://staging.example.com/health || exit 1
+          # Basic API test
+          curl -f https://staging.example.com/api/v1/status || exit 1
+          echo "✅ Smoke tests passed!"
+
+  # ┌─────────────────────────────────────────────────────────────────────────┐
+  # │ STAGE 5: Deploy to Production (Manual Approval)                         │
+  # └─────────────────────────────────────────────────────────────────────────┘
+  deploy-production:
+    name: "🟢 Deploy to Production"
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    # Only deploy to production on tagged releases
+    if: startsWith(github.ref, 'refs/tags/v')
+    environment:
+      name: production
+      url: https://example.com
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "☸️ Set up kubectl"
+        uses: azure/setup-kubectl@v3
+
+      - name: "🔑 Configure Kubernetes"
+        run: |
+          echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > kubeconfig
+          echo "KUBECONFIG=$(pwd)/kubeconfig" >> $GITHUB_ENV
+
+      - name: "🚀 Deploy to production"
+        run: |
+          kubectl set image deployment/app \
+            app=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build-and-test.outputs.version }} \
+            --namespace=production
+          kubectl rollout status deployment/app --namespace=production --timeout=600s
+
+      - name: "✅ Verify deployment"
+        run: |
+          sleep 30
+          curl -f https://example.com/health || exit 1
+          echo "✅ Production deployment verified!"
+
+      # Notify team on Slack
+      - name: "📢 Slack notification"
+        if: always()
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "🚀 Production Deploy: ${{ job.status }}\nVersion: ${{ needs.build-and-test.outputs.version }}\nRepo: ${{ github.repository }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

@@ -1,0 +1,73 @@
+# =============================================================================
+# ☸️ Network Policy — Pod-level firewall
+# =============================================================================
+# Deny all traffic by default, then explicitly allow what's needed.
+# This follows the principle of least privilege for networking.
+# =============================================================================
+
+# Default deny all ingress traffic in the namespace
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: production
+spec:
+  podSelector: {}  # Applies to ALL pods in namespace
+  policyTypes:
+    - Ingress
+
+---
+# Allow traffic to myapp only from ingress controller and monitoring
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: myapp-network-policy
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: myapp
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow from ingress controller
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+      ports:
+        - port: 3000
+          protocol: TCP
+    # Allow from Prometheus (monitoring)
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+      ports:
+        - port: 3000
+          protocol: TCP
+  egress:
+    # Allow DNS resolution
+    - to: []
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+    # Allow database access
+    - to:
+        - podSelector:
+            matchLabels:
+              app: postgres
+      ports:
+        - port: 5432
+          protocol: TCP
+    # Allow Redis access
+    - to:
+        - podSelector:
+            matchLabels:
+              app: redis
+      ports:
+        - port: 6379
+          protocol: TCP

@@ -1,0 +1,170 @@
+# =============================================================================
+# 🚨 Prometheus Alert Rules
+# =============================================================================
+# Description: Production-grade alerting rules covering:
+#   - Application health (latency, errors, saturation)
+#   - Infrastructure health (CPU, memory, disk)
+#   - Database health (connections, replication)
+#   - Watchdog / dead man's switch
+#
+# Best Practices Applied:
+#   1. Alert on symptoms (user impact), not causes
+#   2. Every alert has a runbook link
+#   3. Severity levels: critical (page), warning (ticket), info (dashboard)
+#   4. Pending period (for) prevents flapping alerts
+#   5. Labels for routing (team, severity)
+#
+# Reference: https://prometheus.io/docs/alerting/latest/alerting_rules/
+# =============================================================================
+
+groups:
+  # ┌─────────────────────────────────────────────────────────────────────────┐
+  # │ APPLICATION ALERTS — The 4 Golden Signals                               │
+  # └─────────────────────────────────────────────────────────────────────────┘
+  - name: application.rules
+    rules:
+      # --- High Error Rate ---
+      - alert: HighErrorRate
+        # Fires when more than 5% of requests are failing (5xx)
+        expr: |
+          (
+            sum(rate(http_requests_total{status=~"5.."}[5m])) by (service)
+            /
+            sum(rate(http_requests_total[5m])) by (service)
+          ) > 0.05
+        for: 5m  # Must persist for 5 minutes before alerting
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "High error rate on {{ $labels.service }}"
+          description: |
+            Error rate is {{ $value | humanizePercentage }} for service {{ $labels.service }}.
+            This exceeds the 5% threshold.
+          runbook_url: "https://runbooks.example.com/high-error-rate"
+
+      # --- High Latency ---
+      - alert: HighLatencyP95
+        # Fires when 95th percentile latency exceeds 500ms
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service)
+          ) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High p95 latency on {{ $labels.service }}"
+          description: |
+            P95 latency is {{ $value | humanizeDuration }} for {{ $labels.service }}.
+            SLO target: 500ms.
+          runbook_url: "https://runbooks.example.com/high-latency"
+
+      # --- High Latency (Critical) ---
+      - alert: HighLatencyP99
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service)
+          ) > 2
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "Critical p99 latency on {{ $labels.service }}"
+          description: "P99 latency is {{ $value | humanizeDuration }}. Exceeds 2s threshold."
+          runbook_url: "https://runbooks.example.com/critical-latency"
+
+      # --- Traffic Drop ---
+      - alert: TrafficDrop
+        # Fires when traffic drops by 50% compared to same time last week
+        expr: |
+          sum(rate(http_requests_total[5m])) by (service)
+          < 
+          sum(rate(http_requests_total[5m] offset 1w)) by (service) * 0.5
+        for: 15m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Significant traffic drop on {{ $labels.service }}"
+          description: "Traffic dropped >50% compared to last week. Could indicate an issue."
+
+  # ┌─────────────────────────────────────────────────────────────────────────┐
+  # │ INFRASTRUCTURE ALERTS — CPU, Memory, Disk                               │
+  # └─────────────────────────────────────────────────────────────────────────┘
+  - name: infrastructure.rules
+    rules:
+      # --- High CPU Usage ---
+      - alert: HighCPUUsage
+        expr: |
+          100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 10m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "High CPU on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value | humanize }}% for over 10 minutes."
+          runbook_url: "https://runbooks.example.com/high-cpu"
+
+      # --- High Memory Usage ---
+      - alert: HighMemoryUsage
+        expr: |
+          (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "High memory on {{ $labels.instance }}"
+          description: "Memory usage is {{ $value | humanize }}%."
+          runbook_url: "https://runbooks.example.com/high-memory"
+
+      # --- Disk Space Low ---
+      - alert: DiskSpaceLow
+        expr: |
+          (1 - node_filesystem_avail_bytes{fstype!~"tmpfs|fuse.*"} 
+            / node_filesystem_size_bytes{fstype!~"tmpfs|fuse.*"}) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "Disk space low on {{ $labels.instance }}"
+          description: |
+            Disk {{ $labels.mountpoint }} is {{ $value | humanize }}% full.
+          runbook_url: "https://runbooks.example.com/disk-space"
+
+      # --- Disk Space Critical ---
+      - alert: DiskSpaceCritical
+        expr: |
+          (1 - node_filesystem_avail_bytes{fstype!~"tmpfs|fuse.*"} 
+            / node_filesystem_size_bytes{fstype!~"tmpfs|fuse.*"}) * 100 > 95
+        for: 1m
+        labels:
+          severity: critical
+          team: infrastructure
+        annotations:
+          summary: "CRITICAL: Disk almost full on {{ $labels.instance }}"
+          description: "Disk {{ $labels.mountpoint }} is {{ $value | humanize }}% full!"
+          runbook_url: "https://runbooks.example.com/disk-space-critical"
+
+  # ┌─────────────────────────────────────────────────────────────────────────┐
+  # │ WATCHDOG — Dead Man's Switch                                            │
+  # └─────────────────────────────────────────────────────────────────────────┘
+  - name: watchdog.rules
+    rules:
+      # This alert should ALWAYS be firing. If it stops, your alerting
+      # pipeline is broken. Configure your notification system to alert
+      # when this alert is NOT firing.
+      - alert: Watchdog
+        expr: vector(1)
+        labels:
+          severity: none
+        annotations:
+          summary: "Alerting pipeline watchdog"
+          description: |
+            This is a dead man's switch alert. It should always be firing.
+            If this alert stops firing, your alerting system is broken.

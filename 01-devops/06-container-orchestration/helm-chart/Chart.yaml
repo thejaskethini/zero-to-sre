@@ -1,0 +1,33 @@
+# =============================================================================
+# ☸️ Helm Chart — Application Deployment
+# =============================================================================
+# Description:
+#   Production-ready Helm chart for deploying applications to Kubernetes.
+#   Supports: deployment, service, ingress, HPA, and service monitor.
+#
+# Usage:
+#   # Install
+#   helm install myapp ./helm-chart -n production --create-namespace
+#
+#   # Upgrade
+#   helm upgrade myapp ./helm-chart -n production -f values-prod.yaml
+#
+#   # Dry run (preview)
+#   helm install myapp ./helm-chart --dry-run --debug
+#
+#   # Template rendering
+#   helm template myapp ./helm-chart
+# =============================================================================
+apiVersion: v2
+name: myapp
+description: A production-ready Helm chart for deploying applications
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+maintainers:
+  - name: Zero to SRE
+    url: https://github.com/thejas0501/zero-to-sre
+keywords:
+  - application
+  - microservice
+  - production

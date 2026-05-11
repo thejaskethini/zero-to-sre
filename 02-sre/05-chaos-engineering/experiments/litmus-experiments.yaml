@@ -1,0 +1,162 @@
+# =============================================================================
+# 💥 Chaos Experiment — Pod Kill (LitmusChaos)
+# =============================================================================
+# Description:
+#   This experiment kills a random pod of the target application to test
+#   the system's resilience and self-healing capabilities.
+#
+# Prerequisites:
+#   - Kubernetes cluster with LitmusChaos installed
+#   - Target application deployed with multiple replicas
+#
+# Install LitmusChaos:
+#   kubectl apply -f https://litmuschaos.github.io/litmus/litmus-operator-v3.0.0.yaml
+#
+# Usage:
+#   kubectl apply -f pod-kill-experiment.yaml
+#   kubectl get chaosresult pod-kill-chaos -n production -o yaml
+#
+# Expected Result:
+#   - One pod is killed
+#   - Kubernetes restarts the pod (liveness/restart policy)
+#   - No user-facing errors during the experiment
+#   - Service recovers within the defined SLO
+# =============================================================================
+
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: pod-kill-chaos
+  namespace: production
+spec:
+  # Application under test
+  appinfo:
+    appns: production
+    applabel: "app=myapp"
+    appkind: deployment
+
+  # Experiment settings
+  engineState: "active"
+  chaosServiceAccount: litmus-admin
+
+  experiments:
+    - name: pod-delete
+      spec:
+        components:
+          env:
+            # Number of pods to kill
+            - name: TOTAL_CHAOS_DURATION
+              value: "30"    # Duration of chaos in seconds
+
+            - name: CHAOS_INTERVAL
+              value: "10"    # Interval between pod kills
+
+            - name: FORCE
+              value: "false" # Graceful delete (true = force kill)
+
+            - name: PODS_AFFECTED_PERC
+              value: "50"    # Kill 50% of pods
+
+        # Probes — Validate that the service is still healthy during chaos
+        probe:
+          - name: "healthcheck"
+            type: "httpProbe"
+            httpProbe/inputs:
+              url: "http://myapp.production.svc.cluster.local/health"
+              method:
+                get:
+                  criteria: "=="
+                  responseCode: "200"
+            mode: "Continuous"
+            runProperties:
+              probeTimeout: 5
+              interval: 5
+              retry: 3
+
+---
+# =============================================================================
+# 💥 Chaos Experiment — Network Latency
+# =============================================================================
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: network-latency-chaos
+  namespace: production
+spec:
+  appinfo:
+    appns: production
+    applabel: "app=myapp"
+    appkind: deployment
+
+  engineState: "active"
+  chaosServiceAccount: litmus-admin
+
+  experiments:
+    - name: pod-network-latency
+      spec:
+        components:
+          env:
+            - name: TOTAL_CHAOS_DURATION
+              value: "60"
+
+            - name: NETWORK_LATENCY
+              value: "300"   # Add 300ms latency
+
+            - name: JITTER
+              value: "100"   # ±100ms jitter
+
+            # Only affect traffic to specific destination
+            - name: DESTINATION_IPS
+              value: ""      # Empty = all traffic
+
+            - name: DESTINATION_HOSTS
+              value: ""
+
+        probe:
+          - name: "latency-check"
+            type: "httpProbe"
+            httpProbe/inputs:
+              url: "http://myapp.production.svc.cluster.local/health"
+              method:
+                get:
+                  criteria: "<"
+                  responseCode: "500"
+            mode: "Continuous"
+            runProperties:
+              probeTimeout: 10
+              interval: 5
+
+---
+# =============================================================================
+# 💥 Chaos Experiment — CPU Stress
+# =============================================================================
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: cpu-stress-chaos
+  namespace: production
+spec:
+  appinfo:
+    appns: production
+    applabel: "app=myapp"
+    appkind: deployment
+
+  engineState: "active"
+  chaosServiceAccount: litmus-admin
+
+  experiments:
+    - name: pod-cpu-hog
+      spec:
+        components:
+          env:
+            - name: TOTAL_CHAOS_DURATION
+              value: "120"    # 2 minutes of CPU stress
+
+            - name: CPU_CORES
+              value: "2"      # Stress 2 CPU cores
+
+            - name: CPU_LOAD
+              value: "80"     # 80% CPU load per core
+
+            - name: PODS_AFFECTED_PERC
+              value: "33"     # Affect 33% of pods
