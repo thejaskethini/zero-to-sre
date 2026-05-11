@@ -126,21 +126,22 @@ graph TD
 ```
 zero-to-sre/
 │
-├── 🔧 01-devops/                      # DevOps Pillar (9 modules)
+├── 🔧 01-devops/                      # DevOps Pillar (10 modules)
 │   ├── 01-linux-fundamentals/         ✅  + system healthcheck script
 │   ├── 02-networking-basics/          ✅  + network debug toolkit
 │   ├── 03-git-version-control/        ✅
 │   ├── 04-ci-cd-pipelines/            ✅  (GitHub Actions, Jenkins, GitLab CI)
-│   ├── 05-containerization/           ✅  (Dockerfile, Compose)
+│   ├── 05-containerization/           ✅  (Dockerfile, Compose, Podman)
 │   ├── 06-container-orchestration/    ✅  (K8s manifests + Helm chart)
-│   ├── 07-infrastructure-as-code/     ✅  (Terraform + Ansible playbook)
-│   ├── 08-gitops/                     ✅  (ArgoCD application)
-│   └── 09-platform-engineering/       ✅
+│   ├── 07-infrastructure-as-code/     ✅  (Terraform AWS/Azure/GCP + Ansible)
+│   ├── 08-gitops/                     ✅  (ArgoCD + FluxCD)
+│   ├── 09-platform-engineering/       ✅
+│   └── 10-cloud-engineering/          ✅  ☁️ AWS + Azure + GCP
 │
 ├── 🔥 02-sre/                         # SRE Pillar (7 modules)
 │   ├── 01-sre-fundamentals/           ✅
 │   ├── 02-slos-slas-slis/             ✅  + SLO tracker script
-│   ├── 03-observability/              ✅  (Prometheus + Grafana dashboard)
+│   ├── 03-observability/              ✅  (Prometheus + Grafana + Jaeger + ELK)
 │   ├── 04-incident-management/        ✅  (Templates + 4 runbooks)
 │   ├── 05-chaos-engineering/          ✅  + LitmusChaos experiments
 │   ├── 06-capacity-planning/          ✅  + k6 load test script
@@ -191,6 +192,7 @@ zero-to-sre/
 | 07 | [**Infrastructure as Code**](./01-devops/07-infrastructure-as-code/) | Terraform, Pulumi, state management, modules | 🟡 Intermediate | ✅ Complete |
 | 08 | [**GitOps**](./01-devops/08-gitops/) | ArgoCD, FluxCD, progressive delivery | 🔴 Advanced | ✅ Complete |
 | 09 | [**Platform Engineering**](./01-devops/09-platform-engineering/) | IDPs, Backstage, golden paths | 🔴 Advanced | ✅ Complete |
+| 10 | [**☁️ Cloud Engineering**](./01-devops/10-cloud-engineering/) | AWS, Azure, GCP — services, CLI, architecture, cost optimization | 🟡 Intermediate | ✅ Complete |
 
 ### 🔥 SRE — Run & Reliability
 
@@ -225,9 +227,12 @@ zero-to-sre/
 | [Linux Cheatsheet](./cheatsheets/linux-cheatsheet.md) | Essential CLI commands |
 | [Git Cheatsheet](./cheatsheets/git-cheatsheet.md) | Branching, merging, undoing mistakes |
 | [Prometheus/PromQL Cheatsheet](./cheatsheets/prometheus-cheatsheet.md) | Golden Signals queries and alerting |
+| [☁️ Cloud CLI Cheatsheet](./cheatsheets/cloud-cli-cheatsheet.md) | AWS, Azure, GCP commands side-by-side |
+| [Helm Cheatsheet](./cheatsheets/helm-cheatsheet.md) | Install, upgrade, debug, chart development |
 | [DevOps Interview Q&A](./interview-prep/devops-questions.md) | Beginner to advanced questions |
 | [SRE Interview Q&A](./interview-prep/sre-questions.md) | Google-style SRE interview prep |
 | [Kubernetes Interview Q&A](./interview-prep/kubernetes-questions.md) | Pods, networking, security, debugging |
+| [☁️ Cloud Interview Q&A](./interview-prep/cloud-questions.md) | AWS, Azure, GCP — beginner to advanced |
 | [System Design Scenarios](./interview-prep/system-design-scenarios.md) | Infrastructure design practice |
 | [🏆 End-to-End Capstone Lab](./labs/end-to-end-lab.md) | Build → Deploy → Monitor → Chaos → Postmortem |
 
