@@ -323,29 +323,49 @@ This project is licensed under the [MIT License](./LICENSE) — use it, share it
 
 ## 👨‍💻 Author
 
-<p align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=22&duration=3000&pause=1000&color=00D4FF&center=true&vCenter=true&repeat=true&width=500&lines=K+A+THEJAS;DevOps+Engineer;Cloud+%7C+Kubernetes+%7C+SRE+%7C+AIOps" alt="K A THEJAS" />
-</p>
+<div align="center">
 
-<p align="center">
-  <strong>K A THEJAS</strong>
-  <br />
-  <em>DevOps Engineer</em>
-</p>
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=28&duration=3000&pause=1000&color=00D4FF&center=true&vCenter=true&repeat=true&width=600&lines=K+A+THEJAS;DevOps+%26+Cloud+Engineer;Building+Reliable+Infrastructure+at+Scale" alt="K A THEJAS" />
 
-<p align="center">
-  <a href="https://github.com/thejas0501"><img src="https://img.shields.io/badge/GitHub-thejas0501-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub" /></a>
-  <a href="https://linkedin.com/in/thejas0501"><img src="https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn" /></a>
-  <a href="mailto:thejas0501@gmail.com"><img src="https://img.shields.io/badge/Email-Contact-EA4335?style=for-the-badge&logo=gmail&logoColor=white" alt="Email" /></a>
-</p>
+<br />
 
-<p align="center">
-  <sub>
-    🔧 Passionate about building reliable, scalable, and automated infrastructure.
-    <br />
-    📚 This repository is my contribution to the DevOps & SRE community — built from real-world experience and industry best practices.
-  </sub>
-</p>
+### 🚀 **K A THEJAS**
+
+#### **DevOps Engineer | Cloud Engineer**
+
+<br />
+
+<a href="https://github.com/thejas0501"><img src="https://img.shields.io/badge/GitHub-thejas0501-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub" /></a>
+<a href="https://linkedin.com/in/thejas0501"><img src="https://img.shields.io/badge/LinkedIn-K_A_THEJAS-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn" /></a>
+<a href="mailto:thejas0501@gmail.com"><img src="https://img.shields.io/badge/Gmail-thejas0501-EA4335?style=for-the-badge&logo=gmail&logoColor=white" alt="Email" /></a>
+
+<br /><br />
+
+**🛠️ Tech Stack & Expertise**
+
+<img src="https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white" alt="AWS" />
+<img src="https://img.shields.io/badge/Azure-0078D4?style=for-the-badge&logo=microsoft-azure&logoColor=white" alt="Azure" />
+<img src="https://img.shields.io/badge/GCP-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white" alt="GCP" />
+<img src="https://img.shields.io/badge/Kubernetes-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white" alt="Kubernetes" />
+<img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
+<img src="https://img.shields.io/badge/Terraform-7B42BC?style=for-the-badge&logo=terraform&logoColor=white" alt="Terraform" />
+<br />
+<img src="https://img.shields.io/badge/Ansible-EE0000?style=for-the-badge&logo=ansible&logoColor=white" alt="Ansible" />
+<img src="https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=prometheus&logoColor=white" alt="Prometheus" />
+<img src="https://img.shields.io/badge/Grafana-F46800?style=for-the-badge&logo=grafana&logoColor=white" alt="Grafana" />
+<img src="https://img.shields.io/badge/ArgoCD-EF7B4D?style=for-the-badge&logo=argo&logoColor=white" alt="ArgoCD" />
+<img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white" alt="GitHub Actions" />
+<img src="https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux" />
+<img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
+
+<br /><br />
+
+> *🔧 Passionate about building reliable, scalable, and automated cloud infrastructure.*
+> *📚 This repository is my contribution to the DevOps & SRE community — built from real-world experience and industry best practices.*
+
+<br />
+
+</div>
 
 ---
 
@@ -358,3 +378,4 @@ This project is licensed under the [MIT License](./LICENSE) — use it, share it
   <img src="https://img.shields.io/badge/22_Modules-7_Cheatsheets-f4c542?style=flat-square" alt="Content" />
   <img src="https://img.shields.io/badge/9_Scripts-10_Projects-43a047?style=flat-square" alt="Code" />
 </p>
+
