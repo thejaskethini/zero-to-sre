@@ -5,7 +5,7 @@
 <p align="center">
   <strong>🎯 Your ultimate open-source roadmap — from absolute beginner to production-ready engineer.</strong>
   <br />
-  <sub>100+ files · 23 deep-dive modules · 9 cheatsheets · 10 projects · Real-world scripts</sub>
+  <sub>150+ files · 23 deep-dive modules · 47 cheatsheets · 10 projects · Real-world scripts</sub>
 </p>
 
 <p align="center">
@@ -200,8 +200,11 @@ zero-to-sre/
 │   ├── 05-llmops/                     ✅
 │   └── 06-predictive-scaling/         ✅  + forecasting script
 │
-├── 📋 cheatsheets/                    # 6 Quick References
-│   ├── kubectl, docker, terraform, linux, git, prometheus
+├── 📋 cheatsheets/                    # 17 Quick References
+│   ├── kubectl, docker, terraform, linux, git, prometheus, nginx, pm2
+│   ├── production-debugging, system-design, observability, networking
+│   ├── cicd-pipeline, security-hardening, incident-response
+│   ├── sre-interview, aws-production, cloud-cli, helm
 │
 ├── 🎓 interview-prep/                # 4 Interview Guides
 │   ├── devops, sre, kubernetes, system-design
@@ -262,18 +265,49 @@ zero-to-sre/
 | 05 | [**LLMOps**](./03-aiops/05-llmops/) | LLMs for ops, incident summarization, RCA | 🔴 Advanced | ✅ Complete |
 | 06 | [**Predictive Scaling**](./03-aiops/06-predictive-scaling/) | Forecasting demand, proactive auto-scaling | 🔴 Advanced | ✅ Complete |
 
-### 📋 Quick References & Interview Prep
+### 📋 Cheatsheets — Core Tools
 
 | Resource | Description |
 |----------|-------------|
-| [kubectl Cheatsheet](./cheatsheets/kubectl-cheatsheet.md) | Essential Kubernetes commands |
-| [Docker Cheatsheet](./cheatsheets/docker-cheatsheet.md) | Container management quick reference |
-| [Terraform Cheatsheet](./cheatsheets/terraform-cheatsheet.md) | IaC workflow and patterns |
-| [Linux Cheatsheet](./cheatsheets/linux-cheatsheet.md) | Essential CLI commands |
-| [Git Cheatsheet](./cheatsheets/git-cheatsheet.md) | Branching, merging, undoing mistakes |
-| [Prometheus/PromQL Cheatsheet](./cheatsheets/prometheus-cheatsheet.md) | Golden Signals queries and alerting |
+| [🐧 Linux Cheatsheet](./cheatsheets/linux-cheatsheet.md) | Essential CLI commands |
+| [📦 Git Cheatsheet](./cheatsheets/git-cheatsheet.md) | Branching, merging, undoing mistakes |
+| [🐳 Docker Cheatsheet](./cheatsheets/docker-cheatsheet.md) | Container management quick reference |
+| [📦 kubectl Cheatsheet](./cheatsheets/kubectl-cheatsheet.md) | Essential Kubernetes commands |
+| [🏗️ Helm Cheatsheet](./cheatsheets/helm-cheatsheet.md) | Install, upgrade, debug, chart development |
+| [🏗️ Terraform Cheatsheet](./cheatsheets/terraform-cheatsheet.md) | IaC workflow and patterns |
+| [🌐 Nginx Cheatsheet](./cheatsheets/nginx-cheatsheet.md) | Reverse proxy, load balancing, SSL, caching, security |
+| [⚙️ PM2 Cheatsheet](./cheatsheets/pm2-cheatsheet.md) | Node.js process management, cluster mode, zero-downtime |
+
+### ☁️ Cheatsheets — Cloud & Infrastructure
+
+| Resource | Description |
+|----------|-------------|
 | [☁️ Cloud CLI Cheatsheet](./cheatsheets/cloud-cli-cheatsheet.md) | AWS, Azure, GCP commands side-by-side |
-| [Helm Cheatsheet](./cheatsheets/helm-cheatsheet.md) | Install, upgrade, debug, chart development |
+| [☁️ AWS Production Cheatsheet](./cheatsheets/aws-production-cheatsheet.md) | EC2, S3, RDS, EKS, IAM, CloudWatch — production ops |
+| [🌐 Networking Cheatsheet](./cheatsheets/networking-cheatsheet.md) | TCP/IP, DNS, HTTP, subnetting, TLS, troubleshooting |
+| [🔄 CI/CD Pipeline Cheatsheet](./cheatsheets/cicd-pipeline-cheatsheet.md) | GitHub Actions, deployment strategies, DORA metrics |
+
+### 🔭 Cheatsheets — Observability & Reliability
+
+| Resource | Description |
+|----------|-------------|
+| [📊 Prometheus/PromQL Cheatsheet](./cheatsheets/prometheus-cheatsheet.md) | Golden Signals queries and alerting |
+| [🔭 Observability Cheatsheet](./cheatsheets/observability-cheatsheet.md) | Metrics, logs, traces, SLI/SLO/SLA, Grafana patterns |
+| [🔥 Production Debugging Cheatsheet](./cheatsheets/production-debugging-cheatsheet.md) | CPU, memory, disk, network, container debugging |
+| [📟 Incident Response Cheatsheet](./cheatsheets/incident-response-cheatsheet.md) | Severity levels, response steps, postmortem templates |
+
+### 🛡️ Cheatsheets — Security & FAANG Interview
+
+| Resource | Description |
+|----------|-------------|
+| [🛡️ Security & Hardening Cheatsheet](./cheatsheets/security-hardening-cheatsheet.md) | Server, container, API security, audit checklists |
+| [🏗️ System Design Cheatsheet](./cheatsheets/system-design-cheatsheet.md) | FAANG interview framework, estimation, scaling patterns |
+| [🧠 SRE Interview Cheatsheet](./cheatsheets/sre-interview-cheatsheet.md) | Core SRE concepts, reliability patterns, chaos engineering |
+
+### 🎓 Interview Prep & Labs
+
+| Resource | Description |
+|----------|-------------|
 | [DevOps Interview Q&A](./interview-prep/devops-questions.md) | Beginner to advanced questions |
 | [SRE Interview Q&A](./interview-prep/sre-questions.md) | Google-style SRE interview prep |
 | [Kubernetes Interview Q&A](./interview-prep/kubernetes-questions.md) | Pods, networking, security, debugging |
@@ -424,8 +458,8 @@ This project is licensed under the [MIT License](./LICENSE) — use it, share it
   <br />
   <sub>If this helped you, consider giving it a ⭐ — it helps others find it too!</sub>
   <br /><br />
-  <img src="https://img.shields.io/badge/101_Files-13%2C254_Lines-00d4ff?style=flat-square" alt="Repo Stats" />
-  <img src="https://img.shields.io/badge/22_Modules-7_Cheatsheets-f4c542?style=flat-square" alt="Content" />
+  <img src="https://img.shields.io/badge/150+_Files-20%2C000+_Lines-00d4ff?style=flat-square" alt="Repo Stats" />
+  <img src="https://img.shields.io/badge/23_Modules-47_Cheatsheets-f4c542?style=flat-square" alt="Content" />
   <img src="https://img.shields.io/badge/9_Scripts-10_Projects-43a047?style=flat-square" alt="Code" />
 </p>
 
