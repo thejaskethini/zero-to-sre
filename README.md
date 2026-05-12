@@ -42,6 +42,7 @@
 <td align="center" width="25%">
 
 ### 🔧 DevOps
+
 **Build & Ship**
 <br />
 CI/CD · Containers · K8s
@@ -51,6 +52,7 @@ IaC · GitOps · Platform
 <td align="center" width="25%">
 
 ### ☁️ Cloud
+
 **Deploy Anywhere**
 <br />
 AWS · Azure · GCP
@@ -60,6 +62,7 @@ Multi-Cloud · Cost Ops
 <td align="center" width="25%">
 
 ### 🔥 SRE
+
 **Run & Reliability**
 <br />
 SLOs · Observability
@@ -69,6 +72,7 @@ Chaos · Incidents
 <td align="center" width="25%">
 
 ### 🤖 AIOps
+
 **Intelligent Ops**
 <br />
 Anomaly Detection
@@ -462,4 +466,3 @@ This project is licensed under the [MIT License](./LICENSE) — use it, share it
   <img src="https://img.shields.io/badge/23_Modules-47_Cheatsheets-f4c542?style=flat-square" alt="Content" />
   <img src="https://img.shields.io/badge/9_Scripts-10_Projects-43a047?style=flat-square" alt="Code" />
 </p>
-

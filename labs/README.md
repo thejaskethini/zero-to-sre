@@ -188,6 +188,7 @@ project-6-monitoring/
 ```
 
 **Steps:**
+
 1. Deploy Prometheus + Grafana + Alertmanager via Docker Compose
 2. Instrument a sample app with /metrics endpoint
 3. Configure Prometheus to scrape the app
@@ -215,6 +216,7 @@ project-7-gitops/
 ```
 
 **Steps:**
+
 1. Install ArgoCD on your K8s cluster
 2. Create a Git repo with K8s manifests
 3. Configure ArgoCD Application pointing to the repo
@@ -245,6 +247,7 @@ project-8-incident-sim/
 ```
 
 **Steps:**
+
 1. Set up alert routing (PagerDuty free tier or Opsgenie)
 2. Create 3 incident scenarios with injected failures
 3. Practice the full incident lifecycle: detect → triage → mitigate → resolve
@@ -273,6 +276,7 @@ project-9-chaos/
 ```
 
 **Steps:**
+
 1. Deploy a multi-replica app to K8s
 2. Set up monitoring (Prometheus + Grafana)
 3. Run k6 load test to establish baseline
@@ -310,6 +314,7 @@ project-10-capstone/
 ```
 
 **Steps:**
+
 1. Write a REST API with Prometheus metrics
 2. Containerize with multi-stage Docker build
 3. Deploy to K8s with Helm chart

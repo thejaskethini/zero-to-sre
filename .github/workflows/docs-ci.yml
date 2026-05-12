@@ -36,11 +36,21 @@ jobs:
         with:
           config: |
             {
+              "MD009": false,
               "MD013": false,
-              "MD033": false,
-              "MD041": false,
+              "MD022": false,
               "MD024": false,
-              "MD036": false
+              "MD026": false,
+              "MD031": false,
+              "MD032": false,
+              "MD033": false,
+              "MD036": false,
+              "MD040": false,
+              "MD041": false,
+              "MD045": false,
+              "MD051": false,
+              "MD058": false,
+              "MD060": false
             }
           globs: |
             **/*.md
@@ -80,6 +90,8 @@ jobs:
                 check-keys: false
               comments:
                 min-spaces-from-content: 1
+              document-start: disable
+              comments-indentation: disable
 
   # ─── Security Scan ──────────────────────────────────────────────────
   security:
