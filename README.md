@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=32&duration=3000&pause=1000&color=00D4FF&center=true&vCenter=true&multiline=true&repeat=true&width=800&height=100&lines=%F0%9F%9A%80+Zero+to+SRE;The+Complete+DevOps+%2B+Cloud+%2B+SRE+%2B+AIOps+Guide" alt="Zero to SRE" />
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=32&duration=3000&pause=1000&color=00D4FF&center=true&vCenter=true&multiline=true&repeat=true&width=800&height=100&lines=%F0%9F%9A%80+Zero+to+SRE;The+Complete+DevOps+%2B+Cloud+%2B+SRE+%2B+AIOps" alt="Zero to SRE" />
 </p>
 
 <p align="center">
